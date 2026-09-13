@@ -83,7 +83,7 @@ local hideCorner = Instance.new("UICorner")
 hideCorner.CornerRadius = UDim.new(0, 4)
 hideCorner.Parent = HideInsideBtn
 
--- Плавающая иконка-кнопка на экране (особенно актуально для телефонов)
+-- Плавающая иконка-кнопка на экране
 local ToggleIconBtn = Instance.new("TextButton")
 ToggleIconBtn.Size = UDim2.new(0, 45, 0, 45)
 ToggleIconBtn.Position = UDim2.new(0, 15, 0, 80)
@@ -262,13 +262,23 @@ end
 
 CloseScriptBtn.MouseButton1Click:Connect(unloadScript)
 
+-- Полный сброс параметров движения при возрождении (исправление бага с бегом и оружием)
 LocalPlayer.CharacterAdded:Connect(function(char)
     FlyEnabled = false
     NoclipEnabled = false
-    task.wait(0.5)
+    task.wait(0.3)
     loadControlModule()
     local humanoid = char:WaitForChild("Humanoid", 5)
-    if humanoid then humanoid.PlatformStand = false end
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    if humanoid then
+        humanoid.PlatformStand = false
+        humanoid.Sit = false
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    end
+    if hrp then
+        hrp.Velocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    end
 end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -283,7 +293,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Телепортация (ПК / Телефоны)
+-- Телепортация
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not isScriptRunning or not TpMouseEnabled or gameProcessed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton3 or input.UserInputType == Enum.UserInputType.Touch then
