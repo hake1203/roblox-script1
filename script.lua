@@ -18,15 +18,15 @@ local InfAmmoEnabled = false
 local Whitelist = {}
 local isScriptRunning = true
 
--- Переменные для биндов (KeyCode)
+-- Переменные для биндов
 local BindNoclip = Enum.KeyCode.N
 local BindFly = Enum.KeyCode.F
 local BindTpMouse = Enum.KeyCode.Q
 local BindInfAmmo = Enum.KeyCode.R
 
--- Переменные для Fly
 local FlySpeed = 50
 local controlModule = nil
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 local function loadControlModule()
     pcall(function()
@@ -35,7 +35,7 @@ local function loadControlModule()
 end
 loadControlModule()
 
--- Создание FOV круга
+-- FOV Круг
 local FOVDrawing = Drawing.new("Circle")
 FOVDrawing.Visible = true
 FOVDrawing.Thickness = 1
@@ -45,12 +45,12 @@ FOVDrawing.Radius = FOV
 
 -- Графический интерфейс
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CheatMenuAdvanced"
+ScreenGui.Name = "CheatMenuCrossplatform"
 ScreenGui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 380, 0, 456)
-MainFrame.Position = UDim2.new(0.5, -190, 0.5, -228)
+MainFrame.Size = UDim2.new(0, isMobile and 320 or 380, 0, isMobile and 400 or 456)
+MainFrame.Position = UDim2.new(0.5, isMobile and -160 or -190, 0.5, isMobile and -200 or -228)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = true
@@ -63,16 +63,51 @@ UICorner.Parent = MainFrame
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
-Title.Text = "Roblox Menu [Insert — скрыть]"
+Title.Text = isMobile and "Roblox Menu [Мобильная версия]" or "Roblox Menu [Insert — скрыть]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
+Title.TextSize = 13
 Title.Font = Enum.Font.SourceSansBold
 Title.Parent = MainFrame
 
--- Функция создания универсальных кнопок с биндами
+-- Кнопка сворачивания внутри меню
+local HideInsideBtn = Instance.new("TextButton")
+HideInsideBtn.Size = UDim2.new(0, 80, 0, 22)
+HideInsideBtn.Position = UDim2.new(1, -85, 0, 4)
+HideInsideBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+HideInsideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+HideInsideBtn.TextSize = 11
+HideInsideBtn.Font = Enum.Font.SourceSansBold
+HideInsideBtn.Text = "Скрыть"
+HideInsideBtn.Parent = MainFrame
+local hideCorner = Instance.new("UICorner")
+hideCorner.CornerRadius = UDim.new(0, 4)
+hideCorner.Parent = HideInsideBtn
+
+-- Плавающая иконка-кнопка на экране (особенно актуально для телефонов)
+local ToggleIconBtn = Instance.new("TextButton")
+ToggleIconBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleIconBtn.Position = UDim2.new(0, 15, 0, 80)
+ToggleIconBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ToggleIconBtn.TextColor3 = Color3.fromRGB(0, 255, 120)
+ToggleIconBtn.TextSize = 16
+ToggleIconBtn.Font = Enum.Font.SourceSansBold
+ToggleIconBtn.Text = "⚡"
+ToggleIconBtn.Parent = ScreenGui
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0, 23)
+iconCorner.Parent = ToggleIconBtn
+
+local function toggleMenuVisibility()
+    MainFrame.Visible = not MainFrame.Visible
+end
+
+HideInsideBtn.MouseButton1Click:Connect(toggleMenuVisibility)
+ToggleIconBtn.MouseButton1Click:Connect(toggleMenuVisibility)
+
+-- Функция переключения фич
 local function createFeatureButton(posY, textPrefix, state, callback, bindKey, bindCallback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.55, 0, 0, 26)
+    btn.Size = UDim2.new(isMobile and 0.92 or 0.55, 0, 0, 26)
     btn.Position = UDim2.new(0.04, 0, 0, posY)
     btn.BackgroundColor3 = state and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 50)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -90,39 +125,41 @@ local function createFeatureButton(posY, textPrefix, state, callback, bindKey, b
         btn.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 50)
     end)
 
-    local bindBtn = Instance.new("TextButton")
-    bindBtn.Size = UDim2.new(0.34, 0, 0, 26)
-    bindBtn.Position = UDim2.new(0.62, 0, 0, posY)
-    bindBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    bindBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    bindBtn.TextSize = 11
-    bindBtn.Font = Enum.Font.SourceSans
-    bindBtn.Text = "Bind: " .. tostring(bindKey.Name)
-    bindBtn.Parent = MainFrame
-    local bCorner = Instance.new("UICorner")
-    bCorner.CornerRadius = UDim.new(0, 6)
-    bCorner.Parent = bindBtn
+    if not isMobile then
+        local bindBtn = Instance.new("TextButton")
+        bindBtn.Size = UDim2.new(0.34, 0, 0, 26)
+        bindBtn.Position = UDim2.new(0.62, 0, 0, posY)
+        bindBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        bindBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        bindBtn.TextSize = 11
+        bindBtn.Font = Enum.Font.SourceSans
+        bindBtn.Text = "Bind: " .. tostring(bindKey.Name)
+        bindBtn.Parent = MainFrame
+        local bCorner = Instance.new("UICorner")
+        bCorner.CornerRadius = UDim.new(0, 6)
+        bCorner.Parent = bindBtn
 
-    bindBtn.MouseButton1Click:Connect(function()
-        bindBtn.Text = "Нажмите..."
-        local connection
-        connection = UserInputService.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.Keyboard then
-                bindKey = input.KeyCode
-                bindBtn.Text = "Bind: " .. tostring(bindKey.Name)
-                bindCallback(bindKey)
-                connection:Disconnect()
-            end
+        bindBtn.MouseButton1Click:Connect(function()
+            bindBtn.Text = "Нажмите..."
+            local connection
+            connection = UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.Keyboard then
+                    bindKey = input.KeyCode
+                    bindBtn.Text = "Bind: " .. tostring(bindKey.Name)
+                    bindCallback(bindKey)
+                    connection:Disconnect()
+                end
+            end)
         end)
-    end)
+    end
 
     return btn
 end
 
--- Верхний ряд быстрых переключателей (ESP, Aim, FOV)
-local function createTopToggle(posX, text, state, callback)
+-- Верхние переключатели
+local function createTopToggle(posX, width, text, state, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.3, 0, 0, 28)
+    btn.Size = UDim2.new(width, 0, 0, 28)
     btn.Position = UDim2.new(posX, 0, 0, 35)
     btn.BackgroundColor3 = state and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 50)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -140,35 +177,20 @@ local function createTopToggle(posX, text, state, callback)
     end)
 end
 
-createTopToggle(0.04, "ESP", ESPEnabled, function() ESPEnabled = not ESPEnabled return ESPEnabled end)
-createTopToggle(0.35, "Aim", AimEnabled, function() AimEnabled = not AimEnabled return AimEnabled end)
-createTopToggle(0.66, "FOV", FOVCircleEnabled, function() FOVCircleEnabled = not FOVCircleEnabled FOVDrawing.Visible = FOVCircleEnabled return FOVCircleEnabled end)
+createTopToggle(0.04, 0.3, "ESP", ESPEnabled, function() ESPEnabled = not ESPEnabled return ESPEnabled end)
+createTopToggle(0.35, 0.3, "Aim", AimEnabled, function() AimEnabled = not AimEnabled return AimEnabled end)
+createTopToggle(0.66, 0.3, "FOV", FOVCircleEnabled, function() FOVCircleEnabled = not FOVCircleEnabled FOVDrawing.Visible = FOVCircleEnabled return FOVCircleEnabled end)
 
--- Создание элементов управления
-createFeatureButton(70, "Ноуклип", NoclipEnabled, function()
-    NoclipEnabled = not NoclipEnabled
-    return NoclipEnabled
-end, BindNoclip, function(k) BindNoclip = k end)
-
-createFeatureButton(102, "Флай", FlyEnabled, function()
-    FlyEnabled = not FlyEnabled
-    return FlyEnabled
-end, BindFly, function(k) BindFly = k end)
-
-createFeatureButton(134, "ТП по колесику", TpMouseEnabled, function()
-    TpMouseEnabled = not TpMouseEnabled
-    return TpMouseEnabled
-end, BindTpMouse, function(k) BindTpMouse = k end)
-
-createFeatureButton(166, "Инф. Патроны", InfAmmoEnabled, function()
-    InfAmmoEnabled = not InfAmmoEnabled
-    return InfAmmoEnabled
-end, BindInfAmmo, function(k) BindInfAmmo = k end)
+local offset = isMobile and 34 or 32
+createFeatureButton(70, "Ноуклип", NoclipEnabled, function() NoclipEnabled = not NoclipEnabled return NoclipEnabled end, BindNoclip, function(k) BindNoclip = k end)
+createFeatureButton(70 + offset, "Флай", FlyEnabled, function() FlyEnabled = not FlyEnabled return FlyEnabled end, BindFly, function(k) BindFly = k end)
+createFeatureButton(70 + offset * 2, "ТП по колесику / тапу", TpMouseEnabled, function() TpMouseEnabled = not TpMouseEnabled return TpMouseEnabled end, BindTpMouse, function(k) BindTpMouse = k end)
+createFeatureButton(70 + offset * 3, "Инф. Патроны", InfAmmoEnabled, function() InfAmmoEnabled = not InfAmmoEnabled return InfAmmoEnabled end, BindInfAmmo, function(k) BindInfAmmo = k end)
 
 -- Поле FOV Radius
 local FOVBox = Instance.new("TextBox")
 FOVBox.Size = UDim2.new(0.92, 0, 0, 26)
-FOVBox.Position = UDim2.new(0.04, 0, 0, 198)
+FOVBox.Position = UDim2.new(0.04, 0, 0, isMobile and 210 or 198)
 FOVBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 FOVBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 FOVBox.TextSize = 12
@@ -191,7 +213,7 @@ end)
 -- Кнопки очистки WList и закрытия скрипта
 local ClearWListBtn = Instance.new("TextButton")
 ClearWListBtn.Size = UDim2.new(0.45, 0, 0, 26)
-ClearWListBtn.Position = UDim2.new(0.04, 0, 0, 230)
+ClearWListBtn.Position = UDim2.new(0.04, 0, 0, isMobile and 242 or 230)
 ClearWListBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 ClearWListBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ClearWListBtn.TextSize = 12
@@ -204,7 +226,7 @@ clearCorner.Parent = ClearWListBtn
 
 local CloseScriptBtn = Instance.new("TextButton")
 CloseScriptBtn.Size = UDim2.new(0.45, 0, 0, 26)
-CloseScriptBtn.Position = UDim2.new(0.51, 0, 0, 230)
+CloseScriptBtn.Position = UDim2.new(0.51, 0, 0, isMobile and 242 or 230)
 CloseScriptBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 CloseScriptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseScriptBtn.TextSize = 12
@@ -215,10 +237,10 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = CloseScriptBtn
 
--- Список игроков для вайтлиста
+-- Список игроков
 local ListContainer = Instance.new("ScrollingFrame")
-ListContainer.Size = UDim2.new(0.92, 0, 0, 160)
-ListContainer.Position = UDim2.new(0.04, 0, 0, 266)
+ListContainer.Size = UDim2.new(0.92, 0, 0, isMobile and 110 or 160)
+ListContainer.Position = UDim2.new(0.04, 0, 0, isMobile and 274 or 266)
 ListContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ListContainer.BorderSizePixel = 0
 ListContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -234,46 +256,38 @@ local function unloadScript()
     isScriptRunning = false
     pcall(function() FOVDrawing:Remove() end)
     for _, gui in pairs(CoreGui:GetChildren()) do
-        if gui.Name == "CheatMenuAdvanced" then gui:Destroy() end
+        if gui.Name == "CheatMenuCrossplatform" then gui:Destroy() end
     end
 end
 
 CloseScriptBtn.MouseButton1Click:Connect(unloadScript)
 
--- Обработка смерти персонажа (сброс флая и платформенного состояния)
 LocalPlayer.CharacterAdded:Connect(function(char)
     FlyEnabled = false
     NoclipEnabled = false
     task.wait(0.5)
     loadControlModule()
     local humanoid = char:WaitForChild("Humanoid", 5)
-    if humanoid then
-        humanoid.PlatformStand = false
-    end
+    if humanoid then humanoid.PlatformStand = false end
 end)
 
--- Обработка биндов клавиатуры
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not isScriptRunning then return end
     if input.KeyCode == Enum.KeyCode.Insert then
-        MainFrame.Visible = not MainFrame.Visible
-    elseif not gameProcessed then
-        if input.KeyCode == BindNoclip then
-            NoclipEnabled = not NoclipEnabled
-        elseif input.KeyCode == BindFly then
-            FlyEnabled = not FlyEnabled
-        elseif input.KeyCode == BindTpMouse then
-            TpMouseEnabled = not TpMouseEnabled
-        elseif input.KeyCode == BindInfAmmo then
-            InfAmmoEnabled = not InfAmmoEnabled
-        end
+        toggleMenuVisibility()
+    elseif not gameProcessed and not isMobile then
+        if input.KeyCode == BindNoclip then NoclipEnabled = not NoclipEnabled
+        elseif input.KeyCode == BindFly then FlyEnabled = not FlyEnabled
+        elseif input.KeyCode == BindTpMouse then TpMouseEnabled = not TpMouseEnabled
+        elseif input.KeyCode == BindInfAmmo then InfAmmoEnabled = not InfAmmoEnabled end
     end
 end)
 
--- Телепортация по клику колёсика мыши
+-- Телепортация (ПК / Телефоны)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not isScriptRunning or not TpMouseEnabled or gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton3 then
+    if input.UserInputType == Enum.UserInputType.MouseButton3 or input.UserInputType == Enum.UserInputType.Touch then
+        if isMobile and not MainFrame.Visible then return end
         local mouse = LocalPlayer:GetMouse()
         if mouse.Target then
             local char = LocalPlayer.Character
@@ -335,7 +349,7 @@ local function removeESP(player)
     end
 end
 
--- Главный цикл обработки кадров (RenderStepped)
+-- Главный цикл обработки
 RunService.RenderStepped:Connect(function()
     if not isScriptRunning then return end
 
@@ -343,7 +357,6 @@ RunService.RenderStepped:Connect(function()
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
-    -- FOV Круг
     local mousePos = UserInputService:GetMouseLocation()
     if FOVCircleEnabled then
         FOVDrawing.Position = mousePos
@@ -352,22 +365,16 @@ RunService.RenderStepped:Connect(function()
         FOVDrawing.Visible = false
     end
 
-    -- Ноуклип
     if NoclipEnabled and char then
         for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
+            if part:IsA("BasePart") then part.CanCollide = false end
         end
     end
 
-    -- Флай
     if FlyEnabled and hrp and humanoid and humanoid.Health > 0 then
         local cam = workspace.CurrentCamera
         local moveDir = Vector3.new()
-        if controlModule then
-            moveDir = controlModule:GetMoveVector()
-        end
+        if controlModule then moveDir = controlModule:GetMoveVector() end
         
         local velocity = (cam.CFrame.LookVector * moveDir.Z + cam.CFrame.RightVector * moveDir.X) * FlySpeed
         hrp.Velocity = Vector3.new(velocity.X, 0, velocity.Z)
@@ -376,33 +383,23 @@ RunService.RenderStepped:Connect(function()
         humanoid.PlatformStand = false
     end
 
-    -- Инфинити патроны
     if InfAmmoEnabled then
         pcall(function()
             if getgc then
                 for _, obj in pairs(getgc(true)) do
-                    if type(obj) == "table" then
-                        if rawget(obj, "Ammo") and rawget(obj, "MaxAmmo") then
-                            if isreadonly and isreadonly(obj) then
-                                setreadonly(obj, false)
-                            end
-                            rawset(obj, "Ammo", 999)
-                            rawset(obj, "MaxAmmo", 999)
-                        end
+                    if type(obj) == "table" and rawget(obj, "Ammo") and rawget(obj, "MaxAmmo") then
+                        if isreadonly and isreadonly(obj) then setreadonly(obj, false) end
+                        rawset(obj, "Ammo", 999)
+                        rawset(obj, "MaxAmmo", 999)
                     end
                 end
             end
-            
             local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-            local containers = {char, backpack}
-            for _, container in pairs(containers) do
+            for _, container in pairs({char, backpack}) do
                 if container then
                     for _, item in pairs(container:GetDescendants()) do
-                        if item:IsA("IntValue") or item:IsA("NumberValue") then
-                            local name = item.Name:lower()
-                            if name:find("ammo") or name:find("clip") or name:find("bullets") then
-                                item.Value = 999
-                            end
+                        if (item:IsA("IntValue") or item:IsA("NumberValue")) and (item.Name:lower():find("ammo") or item.Name:lower():find("clip")) then
+                            item.Value = 999
                         end
                     end
                 end
@@ -410,7 +407,6 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- ESP отрисовка
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             local pChar = player.Character
@@ -420,13 +416,11 @@ RunService.RenderStepped:Connect(function()
                     box.Visible = false
                     box.Thickness = 1
                     box.Filled = false
-
                     local text = Drawing.new("Text")
                     text.Visible = false
                     text.Size = 13
                     text.Center = true
                     text.Outline = true
-
                     espDrawings[player] = {Box = box, Text = text}
                 end
 
@@ -436,7 +430,6 @@ RunService.RenderStepped:Connect(function()
                 if onScreen then
                     local scale = 1 / (vector.Z * math.tan(math.rad(Camera.FieldOfView / 2)) * 2) * 1000
                     local w, h = math.clamp(20 * scale, 15, 300), math.clamp(30 * scale, 20, 400)
-                    
                     local box = espDrawings[player].Box
                     box.Size = Vector2.new(w, h)
                     box.Position = Vector2.new(vector.X - w / 2, vector.Y - h / 2)
@@ -461,22 +454,19 @@ end)
 
 Players.PlayerRemoving:Connect(removeESP)
 
--- Логика Аимбота
+-- Аимбот
 local function getClosestPlayer()
     local target = nil
     local shortestDist = FOV
-
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= LocalPlayer and not Whitelist[v.Name] and v.Character and v.Character:FindFirstChild("Head") then
             local humanoid = v.Character:FindFirstChildOfClass("Humanoid")
             if humanoid and humanoid.Health > 0 then
                 local head = v.Character.Head
                 local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                
                 if onScreen then
                     local mousePos = UserInputService:GetMouseLocation()
                     local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                    
                     if distance < shortestDist then
                         shortestDist = distance
                         target = head
@@ -491,12 +481,12 @@ end
 RunService.RenderStepped:Connect(function()
     if not isScriptRunning or not AimEnabled then return end
     
-    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+    local shouldAim = isMobile or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    if shouldAim then
         local targetHead = getClosestPlayer()
         if targetHead then
             local screenPos, _ = Camera:WorldToViewportPoint(targetHead.Position)
             local mousePos = UserInputService:GetMouseLocation()
-            
             local delta = Vector2.new(screenPos.X, screenPos.Y) - mousePos
             if delta.Magnitude <= FOV then
                 if mousemoverel then
